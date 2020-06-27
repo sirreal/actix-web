@@ -1,0 +1,1 @@
+initSidebarItems({"attr":[["test","Marks async test function to be executed by actix runtime."]],"fn":[["test_server","Start test server"],["unused_addr","Get first available unused address"]],"struct":[["TestServer","Test server controller"],["TestServer","The `TestServer` type."],["TestServerRuntime","Test server runstime"]]});
