@@ -1,11 +1,10 @@
 //! Error and Result module
 pub use actix_http::error::*;
+pub use awc::error::JsonPayloadError;
 use derive_more::{Display, From};
-use serde_json::error::Error as JsonError;
 use url::ParseError as UrlParseError;
 
 use crate::http::StatusCode;
-use crate::HttpResponse;
 
 /// Errors which can occur when attempting to generate resource uri.
 #[derive(Debug, PartialEq, Display, From)]
@@ -62,37 +61,6 @@ impl ResponseError for UrlencodedError {
             UrlencodedError::Overflow { .. } => StatusCode::PAYLOAD_TOO_LARGE,
             UrlencodedError::UnknownLength => StatusCode::LENGTH_REQUIRED,
             _ => StatusCode::BAD_REQUEST,
-        }
-    }
-}
-
-/// A set of errors that can occur during parsing json payloads
-#[derive(Debug, Display, From)]
-pub enum JsonPayloadError {
-    /// Payload size is bigger than allowed. (default: 32kB)
-    #[display(fmt = "Json payload size is bigger than allowed")]
-    Overflow,
-    /// Content type error
-    #[display(fmt = "Content type error")]
-    ContentType,
-    /// Deserialize error
-    #[display(fmt = "Json deserialize error: {}", _0)]
-    Deserialize(JsonError),
-    /// Payload error
-    #[display(fmt = "Error that occur during reading payload: {}", _0)]
-    Payload(PayloadError),
-}
-
-impl std::error::Error for JsonPayloadError {}
-
-/// Return `BadRequest` for `JsonPayloadError`
-impl ResponseError for JsonPayloadError {
-    fn error_response(&self) -> HttpResponse {
-        match *self {
-            JsonPayloadError::Overflow => {
-                HttpResponse::new(StatusCode::PAYLOAD_TOO_LARGE)
-            }
-            _ => HttpResponse::new(StatusCode::BAD_REQUEST),
         }
     }
 }
@@ -164,6 +132,7 @@ impl ResponseError for ReadlinesError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::HttpResponse;
 
     #[test]
     fn test_urlencoded_error() {
@@ -173,14 +142,6 @@ mod tests {
         let resp: HttpResponse = UrlencodedError::UnknownLength.error_response();
         assert_eq!(resp.status(), StatusCode::LENGTH_REQUIRED);
         let resp: HttpResponse = UrlencodedError::ContentType.error_response();
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
-    }
-
-    #[test]
-    fn test_json_payload_error() {
-        let resp: HttpResponse = JsonPayloadError::Overflow.error_response();
-        assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
-        let resp: HttpResponse = JsonPayloadError::ContentType.error_response();
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 

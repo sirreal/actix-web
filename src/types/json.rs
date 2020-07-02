@@ -421,7 +421,7 @@ mod tests {
     use serde_derive::{Deserialize, Serialize};
 
     use super::*;
-    use crate::error::InternalError;
+    use crate::error::{InternalError, JsonPayloadError};
     use crate::http::header;
     use crate::test::{load_stream, TestRequest};
     use crate::HttpResponse;
